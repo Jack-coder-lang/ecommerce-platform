@@ -165,15 +165,17 @@ export const emitNotification = (userId, notification) => {
 // Démarrage du serveur
 const PORT = process.env.PORT || 5000;
 
-httpServer.listen(PORT, () => {
+// APRÈS (compatible Render)
+httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`╔════════════════════════════════════════════╗
              ║   🚀 Serveur E-commerce démarré            ║
              ║   📡 Port: ${PORT}                         ║
-             ║   🌍 URL: http://localhost:${PORT}         ║
+             ║   🌍 URL: http://0.0.0.0:${PORT}           ║
              ║   🔌 Socket.IO: Activé                     ║
              ║   📦 Base de données: Connectée            ║
              ╚════════════════════════════════════════════╝
   `);
+  console.log(`✅ Server listening on 0.0.0.0:${PORT} - Ready for Render`);
 });
 
 // Gestion de l'arrêt propre
