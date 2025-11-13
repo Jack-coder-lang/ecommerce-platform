@@ -26,7 +26,7 @@ services:
     name: ecommerce-frontend
     runtime: static
     env: static
-    region: frankfurt
+
     plan: free
     rootDir: frontend
     buildCommand: npm install && npm run build
