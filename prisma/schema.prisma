@@ -77,9 +77,10 @@ model User {
   orders        Order[]
   reviews       Review[]
   notifications Notification[]
-  
-  // ApprovedBy relation
-  approvedByUser User? @relation("UserApprovals", fields: [approvedBy], references: [id])
+
+  // ApprovedBy relation (self-referential)
+  approvedByUser User?   @relation("UserApprovals", fields: [approvedBy], references: [id])
+  usersApproved  User[]  @relation("UserApprovals")
   
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
