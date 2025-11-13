@@ -6,3 +6,4 @@ node_modules
 # Ou autoriser tous les PNG dans le dossier icons
 !public/icons/*.png
 nul
+.vercel
