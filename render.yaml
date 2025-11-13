@@ -24,7 +24,7 @@ services:
   - type: web
     name: ecommerce-frontend
     env: static
-    plan: free
+
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
