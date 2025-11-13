@@ -1,1 +1,7 @@
 node_modules
+# Autoriser les icônes PWA spécifiques
+!public/icons/pwa-192x192.png
+!public/icons/pwa-512x512.png
+
+# Ou autoriser tous les PNG dans le dossier icons
+!public/icons/*.png

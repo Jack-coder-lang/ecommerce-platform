@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import prisma from './config/database.js';
 
 // Routes
@@ -14,23 +16,23 @@ import notificationRoutes from './routes/notification.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import profileRoutes from './routes/profile.routes.js';
 
+// __dirname pour ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
-  
 
-// Origines autorisées pour le frontend (comma-separated in env, e.g. "http://localhost:5173,http://localhost:5174")
+// Origines autorisées pour le frontend
 const FRONTEND_URLS = (process.env.FRONTEND_URL || 'http://localhost:5173').split(',').map(s => s.trim()).filter(Boolean);
 
-// Log allowed origins at startup to help debugging CORS
 console.log('Allowed FRONTEND_URLS:', FRONTEND_URLS);
 
-// Middleware CORS pour Express - accepter dynamiquement les origins listées
+// Middleware CORS pour Express
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow non-browser requests like Postman (no origin)
     if (!origin) return callback(null, true);
     if (FRONTEND_URLS.includes(origin)) return callback(null, true);
     return callback(new Error(`CORS policy: origin ${origin} not allowed`));
@@ -40,11 +42,13 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Configuration Socket.IO pour les notifications en temps réel
+// ⭐ SERVIR LES FICHIERS STATIQUES (AJOUT CRITIQUE)
+app.use(express.static(path.join(__dirname, '..', 'public')));
+
+// Configuration Socket.IO
 const io = new Server(httpServer, {
   cors: {
     origin: (origin, callback) => {
-      // Socket.IO may pass undefined origin for non-browser clients
       if (!origin) return callback(null, true);
       if (FRONTEND_URLS.includes(origin)) return callback(null, true);
       return callback(new Error(`Socket.IO CORS: origin ${origin} not allowed`));
@@ -57,7 +61,7 @@ const io = new Server(httpServer, {
 // Rendre io accessible dans toutes les routes
 app.set('io', io);
 
-// Routes
+// Routes API
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/cart', cartRoutes);
@@ -65,6 +69,15 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/profile', profileRoutes);
+
+// ⭐ ROUTES PWA POUR LES ICÔNES (AJOUT CRITIQUE)
+app.get('/pwa-192x192.png', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'icons', 'pwa-192x192.png'));
+});
+
+app.get('/pwa-512x512.png', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'icons', 'pwa-512x512.png'));
+});
 
 // Route de base
 app.get('/', (req, res) => {
@@ -85,7 +98,6 @@ app.get('/', (req, res) => {
 app.post('/api/payments/notify', async (req, res) => {
   try {
     console.log('Notification CinetPay reçue:', req.body);
-
     const { cpm_trans_id, cpm_trans_status } = req.body;
 
     if (cpm_trans_status === '00') {
@@ -102,7 +114,6 @@ app.post('/api/payments/notify', async (req, res) => {
           },
         });
 
-        // Émettre une notification Socket.IO
         io.to(order.userId).emit('payment-success', {
           orderId: order.id,
           orderNumber: order.orderNumber,
@@ -111,7 +122,6 @@ app.post('/api/payments/notify', async (req, res) => {
     }
 
     res.status(200).json({ message: 'Notification traitée' });
-
   } catch (error) {
     console.error('Erreur traitement notification:', error);
     res.status(500).json({ message: 'Erreur', error: error.message });
@@ -138,14 +148,12 @@ const connectedUsers = new Map();
 io.on('connection', (socket) => {
   console.log('Nouvelle connexion Socket.IO:', socket.id);
 
-  // Authentification de l'utilisateur
   socket.on('authenticate', (userId) => {
     connectedUsers.set(userId, socket.id);
     socket.join(userId);
     console.log(`Utilisateur ${userId} authentifié sur socket ${socket.id}`);
   });
 
-  // Déconnexion
   socket.on('disconnect', () => {
     for (const [userId, socketId] of connectedUsers.entries()) {
       if (socketId === socket.id) {
@@ -165,7 +173,6 @@ export const emitNotification = (userId, notification) => {
 // Démarrage du serveur
 const PORT = process.env.PORT || 5000;
 
-// APRÈS (compatible Render)
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`╔════════════════════════════════════════════╗
              ║   🚀 Serveur E-commerce démarré            ║
@@ -173,9 +180,9 @@ httpServer.listen(PORT, '0.0.0.0', () => {
              ║   🌍 URL: http://0.0.0.0:${PORT}           ║
              ║   🔌 Socket.IO: Activé                     ║
              ║   📦 Base de données: Connectée            ║
+             ║   📁 Static files: public/                 ║
              ╚════════════════════════════════════════════╝
   `);
-  console.log(`✅ Server listening on 0.0.0.0:${PORT} - Ready for Render`);
 });
 
 // Gestion de l'arrêt propre
