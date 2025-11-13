@@ -30,12 +30,37 @@ const FRONTEND_URLS = (process.env.FRONTEND_URL || 'http://localhost:5173').spli
 
 console.log('Allowed FRONTEND_URLS:', FRONTEND_URLS);
 
+// Fonction pour valider les origines CORS
+const isAllowedOrigin = (origin) => {
+  if (!origin) return true; // Requêtes sans origin (ex: serveur à serveur)
+
+  // Autoriser localhost sur tous les ports (développement)
+  if (origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:')) {
+    return true;
+  }
+
+  // Autoriser tous les sous-domaines Vercel (previews + production)
+  if (origin.endsWith('.vercel.app')) {
+    return true;
+  }
+
+  // Autoriser les URLs spécifiques de FRONTEND_URL
+  if (FRONTEND_URLS.includes(origin)) {
+    return true;
+  }
+
+  return false;
+};
+
 // Middleware CORS pour Express
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin) return callback(null, true);
-    if (FRONTEND_URLS.includes(origin)) return callback(null, true);
-    return callback(new Error(`CORS policy: origin ${origin} not allowed`));
+    if (isAllowedOrigin(origin)) {
+      callback(null, true);
+    } else {
+      console.warn(`⚠️ CORS blocked origin: ${origin}`);
+      callback(new Error(`CORS policy: origin ${origin} not allowed`));
+    }
   },
   credentials: true,
 }));
@@ -49,9 +74,12 @@ app.use(express.static(path.join(__dirname, '..', 'public')));
 const io = new Server(httpServer, {
   cors: {
     origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
-      if (FRONTEND_URLS.includes(origin)) return callback(null, true);
-      return callback(new Error(`Socket.IO CORS: origin ${origin} not allowed`));
+      if (isAllowedOrigin(origin)) {
+        callback(null, true);
+      } else {
+        console.warn(`⚠️ Socket.IO CORS blocked origin: ${origin}`);
+        callback(new Error(`Socket.IO CORS: origin ${origin} not allowed`));
+      }
     },
     methods: ['GET', 'POST'],
     credentials: true,
