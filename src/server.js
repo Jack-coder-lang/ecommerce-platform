@@ -15,6 +15,7 @@ import orderRoutes from './routes/order.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import profileRoutes from './routes/profile.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 
 // __dirname pour ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -97,6 +98,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/admin', adminRoutes);
 
 // ⭐ ROUTES PWA POUR LES ICÔNES (AJOUT CRITIQUE)
 app.get('/pwa-192x192.png', (req, res) => {
