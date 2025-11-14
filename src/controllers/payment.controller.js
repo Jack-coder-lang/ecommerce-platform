@@ -23,8 +23,11 @@ export const initializePayment = async (req, res) => {
       customer
     } = req.body;
 
+    console.log('🔵 Initialisation paiement CinetPay:', { orderId, amount, currency, channels });
+
     // Validation
     if (!orderId || !amount || !customer) {
+      console.error('❌ Paramètres manquants:', { orderId, amount, customer: !!customer });
       return res.status(400).json({
         success: false,
         message: 'Paramètres manquants: orderId, amount, customer requis'
@@ -32,17 +35,21 @@ export const initializePayment = async (req, res) => {
     }
 
     // Vérifier que la commande existe
+    console.log('🔍 Recherche de la commande:', orderId);
     const order = await prisma.order.findUnique({
       where: { id: orderId },
       include: { user: true }
     });
 
     if (!order) {
+      console.error('❌ Commande non trouvée:', orderId);
       return res.status(404).json({
         success: false,
         message: 'Commande non trouvée'
       });
     }
+
+    console.log('✅ Commande trouvée:', { id: order.id, userId: order.userId, total: order.total });
 
     // Générer un transaction_id unique
     const transactionId = generateTransactionId();
@@ -75,12 +82,21 @@ export const initializePayment = async (req, res) => {
     };
 
     // Appeler l'API CinetPay
+    console.log('📡 Appel API CinetPay avec:', {
+      apikey: paymentData.apikey?.substring(0, 10) + '...',
+      site_id: paymentData.site_id,
+      amount: paymentData.amount,
+      transaction_id: paymentData.transaction_id
+    });
+
     const response = await axios.post(CINETPAY_API_URL, paymentData, {
       headers: {
         'Content-Type': 'application/json',
         'User-Agent': 'EcommerceApp/1.0'
       }
     });
+
+    console.log('📥 Réponse CinetPay:', { code: response.data.code, message: response.data.message });
 
     if (response.data.code === '201') {
       // Sauvegarder la transaction dans la base de données
@@ -115,11 +131,15 @@ export const initializePayment = async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Erreur initialisation paiement CinetPay:', error);
+    console.error('❌ Erreur initialisation paiement CinetPay:', error);
+    console.error('❌ Stack:', error.stack);
+    console.error('❌ Response:', error.response?.data);
+
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur lors de l\'initialisation du paiement',
-      error: error.response?.data || error.message
+      error: error.response?.data || error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
