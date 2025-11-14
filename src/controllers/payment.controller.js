@@ -62,8 +62,8 @@ export const initializePayment = async (req, res) => {
       amount: Math.round(amount), // Doit être un entier et multiple de 5
       currency: currency,
       description: `Paiement commande #${orderId}`,
-      notify_url: process.env.CINETPAY_NOTIFY_URL || `${process.env.BACKEND_URL}/api/payments/cinetpay/notify` || 'https://ecommerce-backend-deploy.vercel.app/api/payments/cinetpay/notify',
-      return_url: (process.env.CINETPAY_RETURN_URL || `${process.env.FRONTEND_URL}/payment-success` || 'https://ecommerce-frontend-deploy-752pmno46.vercel.app/payment-success') + `?transaction_id=${transactionId}`,
+      notify_url: (process.env.CINETPAY_NOTIFY_URL || `${process.env.BACKEND_URL}/api/payments/cinetpay/notify` || 'https://ecommerce-backend-deploy.vercel.app/api/payments/cinetpay/notify').trim().replace(/[\n\r]/g, ''),
+      return_url: ((process.env.CINETPAY_RETURN_URL || `${process.env.FRONTEND_URL}/payment-success` || 'https://ecommerce-frontend-deploy-752pmno46.vercel.app/payment-success').trim().replace(/[\n\r]/g, '') + `?transaction_id=${transactionId}`),
       channels: channels,
       metadata: JSON.stringify({ orderId, userId: order.userId }),
       lang: 'fr',
