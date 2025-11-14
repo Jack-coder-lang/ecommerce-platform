@@ -153,7 +153,7 @@ class NotificationController {
 
       // Émettre via Socket.IO si disponible
       const io = global.io;
-      if (io) {
+      if (io && typeof io.to === 'function') {
         io.to(userId).emit('new-notification', notification);
       }
 

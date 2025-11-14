@@ -267,11 +267,14 @@ class OrderController {
         relatedId: order.id,
       });
 
-      io.to(order.userId).emit('order-status-update', {
-        orderId: order.id,
-        orderNumber: order.orderNumber,
-        status: status,
-      });
+      // Émettre l'événement Socket.IO seulement si disponible
+      if (io && typeof io.to === 'function') {
+        io.to(order.userId).emit('order-status-update', {
+          orderId: order.id,
+          orderNumber: order.orderNumber,
+          status: status,
+        });
+      }
 
       res.status(200).json({
         message: 'Statut mis à jour',

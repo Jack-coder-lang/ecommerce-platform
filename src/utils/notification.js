@@ -14,16 +14,21 @@ export const sendNotification = async (io, userId, notificationData) => {
       },
     });
 
-    // Émettre via Socket.IO
-    io.to(userId).emit('new-notification', {
-      id: notification.id,
-      title: notification.title,
-      message: notification.message,
-      type: notification.type,
-      createdAt: notification.createdAt,
-    });
+    // Émettre via Socket.IO (seulement si disponible)
+    // Sur Vercel serverless, Socket.IO n'est pas disponible
+    if (io && typeof io.to === 'function') {
+      io.to(userId).emit('new-notification', {
+        id: notification.id,
+        title: notification.title,
+        message: notification.message,
+        type: notification.type,
+        createdAt: notification.createdAt,
+      });
+      console.log(`📧 Notification Socket.IO envoyée à l'utilisateur ${userId}`);
+    } else {
+      console.log(`📧 Notification créée pour l'utilisateur ${userId} (Socket.IO non disponible)`);
+    }
 
-    console.log(`📧 Notification envoyée à l'utilisateur ${userId}`);
     return notification;
   } catch (error) {
     console.error('Erreur envoi notification:', error);
