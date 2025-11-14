@@ -33,7 +33,7 @@ export const initializePayment = async (req, res) => {
 
     // Vérifier que la commande existe
     const order = await prisma.order.findUnique({
-      where: { id: parseInt(orderId) },
+      where: { id: orderId },
       include: { user: true }
     });
 
@@ -56,7 +56,7 @@ export const initializePayment = async (req, res) => {
       currency: currency,
       description: `Paiement commande #${orderId}`,
       notify_url: `${process.env.CINETPAY_NOTIFY_URL || process.env.BACKEND_URL + '/api/payments/cinetpay/notify'}`,
-      return_url: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/orders/${orderId}?payment=success`,
+      return_url: `${process.env.CINETPAY_RETURN_URL || process.env.FRONTEND_URL + '/payment-success' || 'http://localhost:5173/payment-success'}?transaction_id=${transactionId}`,
       channels: channels,
       metadata: JSON.stringify({ orderId, userId: order.userId }),
       lang: 'fr',
@@ -86,7 +86,7 @@ export const initializePayment = async (req, res) => {
       // Sauvegarder la transaction dans la base de données
       await prisma.payment.create({
         data: {
-          orderId: parseInt(orderId),
+          orderId: orderId,
           transactionId: transactionId,
           amount: amount,
           currency: currency,
