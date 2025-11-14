@@ -13,6 +13,7 @@ import orderRoutes from './routes/order.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import analyticsRoutes from './routes/analytics.routes.js';
 import profileRoutes from './routes/profile.routes.js';
+import paymentRoutes from './routes/payment.routes.js';
 
 // __dirname pour ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -80,6 +81,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Routes PWA pour les icônes
 app.get('/pwa-192x192.png', (req, res) => {

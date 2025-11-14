@@ -163,6 +163,7 @@ model Order {
   shippedAt       DateTime?
   deliveredAt     DateTime?
   items           OrderItem[]
+  payments        Payment[]
   
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
@@ -220,4 +221,25 @@ model Notification {
 
   @@index([userId])
   @@index([isRead])
+}
+model Payment {
+  id              String        @id @default(uuid())
+  orderId         String
+  order           Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  transactionId   String        @unique
+  amount          Float
+  currency        String        @default("XOF")
+  provider        String        @default("CINETPAY")
+  status          String        @default("PENDING") // PENDING, COMPLETED, FAILED
+  paymentUrl      String?
+  paymentToken    String?
+  paymentMethod   String?
+  metadata        String?
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([orderId])
+  @@index([transactionId])
+  @@index([status])
 }
