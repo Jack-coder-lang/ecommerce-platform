@@ -10,6 +10,26 @@ const generateTransactionId = () => {
   return `TXN${Date.now()}${Math.floor(Math.random() * 100000)}`;
 };
 
+// Normaliser le numéro de téléphone pour CinetPay (format international)
+const normalizePhoneNumber = (phone) => {
+  if (!phone) return '+225000000000';
+
+  // Supprimer les espaces et caractères spéciaux
+  let cleaned = phone.replace(/[\s\-\(\)]/g, '');
+
+  // Si commence déjà par +225, retourner tel quel
+  if (cleaned.startsWith('+225')) return cleaned;
+
+  // Si commence par 225 (sans +), ajouter le +
+  if (cleaned.startsWith('225')) return '+' + cleaned;
+
+  // Si commence par 0, remplacer par +225
+  if (cleaned.startsWith('0')) return '+225' + cleaned.substring(1);
+
+  // Sinon, ajouter +225 devant
+  return '+225' + cleaned;
+};
+
 /**
  * Initialiser un paiement CinetPay
  */
@@ -73,12 +93,12 @@ export const initializePayment = async (req, res) => {
       customer_name: customer.name || order.user.lastName || 'Client',
       customer_surname: customer.surname || order.user.firstName || 'Client',
       customer_email: customer.email || order.user.email,
-      customer_phone_number: customer.phone || order.user.phone || '+225000000000',
+      customer_phone_number: normalizePhoneNumber(customer.phone || order.user.phone),
       customer_address: customer.address || 'Adresse non fournie',
       customer_city: customer.city || 'Abidjan',
       customer_country: customer.country || 'CI',
       customer_state: customer.state || 'CI',
-      customer_zip_code: customer.zipCode || '00000'
+      customer_zip_code: customer.zipCode || '00225'
     };
 
     // Appeler l'API CinetPay
