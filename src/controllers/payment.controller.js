@@ -63,10 +63,10 @@ export const initializePayment = async (req, res) => {
 
       // Informations client (obligatoires pour carte bancaire)
       customer_id: order.userId.toString(),
-      customer_name: customer.name || order.user.name || 'Client',
-      customer_surname: customer.surname || order.user.name || 'Client',
+      customer_name: customer.name || order.user.lastName || 'Client',
+      customer_surname: customer.surname || order.user.firstName || 'Client',
       customer_email: customer.email || order.user.email,
-      customer_phone_number: customer.phone || '+225000000000',
+      customer_phone_number: customer.phone || order.user.phone || '+225000000000',
       customer_address: customer.address || 'Adresse non fournie',
       customer_city: customer.city || 'Abidjan',
       customer_country: customer.country || 'CI',
