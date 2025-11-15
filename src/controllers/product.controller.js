@@ -13,41 +13,57 @@ class ProductController {
    */
   async createProduct(req, res) {
     try {
+      // 🔥 VÉRIFICATION: S'assurer que req.user existe
+      if (!req.user || !req.user.id) {
+        console.error('❌ req.user non défini - Middleware auth non exécuté');
+        return res.status(401).json({
+          message: 'Non authentifié - req.user manquant',
+          debug: {
+            hasReqUser: !!req.user,
+            reqUser: req.user
+          }
+        });
+      }
+
       const sellerId = req.user.id;
-      const { 
-        name, 
-        description, 
-        price, 
-        stock, 
-        category, 
+      const {
+        name,
+        description,
+        price,
+        stock,
+        category,
         images,
         attributes,
         weight,
         dimensions,
-        brand
+        brand,
+        shippingFee // Accepter shippingFee du frontend
       } = req.body;
 
       // Validation de la catégorie
       if (!CATEGORIES[category]) {
-        return res.status(400).json({ 
+        return res.status(400).json({
           message: 'Catégorie invalide',
           validCategories: Object.keys(CATEGORIES),
         });
       }
 
-      // Validation des attributs obligatoires
-      const requiredAttrs = CATEGORY_ATTRIBUTES[category]?.required || [];
-      const missingAttrs = requiredAttrs.filter(attr => !attributes?.[attr]);
-      
-      if (missingAttrs.length > 0) {
-        return res.status(400).json({
-          message: `Attributs obligatoires manquants: ${missingAttrs.join(', ')}`,
-          required: requiredAttrs,
-        });
+      // 🔥 MODIFICATION: Les attributs sont optionnels pour la création simple
+      // Validation des attributs obligatoires seulement si des attributs sont fournis
+      if (attributes && Object.keys(attributes).length > 0) {
+        const requiredAttrs = CATEGORY_ATTRIBUTES[category]?.required || [];
+        const missingAttrs = requiredAttrs.filter(attr => !attributes?.[attr]);
+
+        if (missingAttrs.length > 0) {
+          console.warn(`⚠️ Attributs manquants pour ${category}:`, missingAttrs);
+          // Ne pas bloquer, juste logger un warning
+        }
       }
 
-      // Calcul automatique des frais de livraison
-      const shippingFee = weight ? calculateShippingFee(weight, 'STANDARD') : 0;
+      // 🔥 MODIFICATION: Utiliser shippingFee du frontend ou calculer automatiquement
+      const finalShippingFee = shippingFee !== undefined
+        ? parseFloat(shippingFee)
+        : (weight ? calculateShippingFee(weight, 'STANDARD') : 1000); // Default 1000 FCFA
 
       // Gérer les dimensions comme JSON
       let dimensionsJson = null;
@@ -67,10 +83,10 @@ class ProductController {
           stock: parseInt(stock),
           category,
           images: images || [],
-          attributes: attributes || {},
+          attributes: attributes || {}, // Attributs optionnels
           weight: weight ? parseFloat(weight) : null,
           dimensions: dimensionsJson,
-          shippingFee,
+          shippingFee: finalShippingFee, // 🔥 Utiliser finalShippingFee
           sellerId,
           brand: brand || null,
         },

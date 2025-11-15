@@ -81,6 +81,37 @@ class AuthController {
         return res.status(401).json({ message: 'Email ou mot de passe incorrect' });
       }
 
+      // ✅ VÉRIFICATION DU STATUT :
+      // - VENDEURS : doivent être APPROVED pour se connecter
+      // - ACHETEURS : peuvent se connecter sans approbation
+      // - ADMINS : peuvent toujours se connecter
+      if (user.role === 'SELLER' && user.status !== 'APPROVED') {
+        let message = 'Compte vendeur non approuvé';
+
+        switch (user.status) {
+          case 'PENDING':
+            message = 'Votre compte vendeur est en attente de validation par un administrateur. Vous recevrez un email dès l\'approbation.';
+            break;
+          case 'REJECTED':
+            message = 'Votre compte vendeur a été refusé. Contactez l\'administrateur pour plus d\'informations.';
+            break;
+          case 'SUSPENDED':
+            message = 'Votre compte vendeur a été suspendu. Contactez l\'administrateur.';
+            break;
+        }
+
+        return res.status(403).json({ message });
+      }
+
+      // Bloquer également les comptes rejetés ou suspendus (tous rôles)
+      if (user.status === 'REJECTED' || user.status === 'SUSPENDED') {
+        return res.status(403).json({
+          message: user.status === 'REJECTED'
+            ? 'Votre compte a été refusé.'
+            : 'Votre compte a été suspendu.'
+        });
+      }
+
       const token = jwt.sign(
         { userId: user.id, email: user.email, role: user.role },
         process.env.JWT_SECRET,

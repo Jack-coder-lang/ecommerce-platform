@@ -28,22 +28,14 @@ export const authenticate = async (req, res, next) => {
       return res.status(401).json({ message: 'Utilisateur non trouvé.' });
     }
 
-    // VÉRIFICATION DU STATUT DU COMPTE - AJOUTÉ
-    if (user.status !== 'APPROVED') {
-      let message = 'Compte non approuvé';
-      
-      switch (user.status) {
-        case 'PENDING':
-          message = 'Votre compte est en attente de validation par un administrateur';
-          break;
-        case 'REJECTED':
-          message = 'Votre compte a été refusé. Contactez l\'administrateur.';
-          break;
-        case 'SUSPENDED':
-          message = 'Votre compte a été suspendu. Contactez l\'administrateur.';
-          break;
-      }
-      
+    // VÉRIFICATION DU STATUT DU COMPTE
+    // Seuls les comptes REJETÉS ou SUSPENDUS sont bloqués
+    // Les PENDING peuvent utiliser les routes (le login gère déjà les vendeurs PENDING)
+    if (user.status === 'REJECTED' || user.status === 'SUSPENDED') {
+      const message = user.status === 'REJECTED'
+        ? 'Votre compte a été refusé. Contactez l\'administrateur.'
+        : 'Votre compte a été suspendu. Contactez l\'administrateur.';
+
       return res.status(403).json({ message });
     }
 
