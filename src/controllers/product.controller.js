@@ -36,7 +36,7 @@ class ProductController {
         attributes,
         weight,
         dimensions,
-        brand,
+        // brand, // Retiré - n'existe pas dans schéma Prisma
         shippingFee // Accepter shippingFee du frontend
       } = req.body;
 
@@ -88,7 +88,7 @@ class ProductController {
           dimensions: dimensionsJson,
           shippingFee: finalShippingFee, // 🔥 Utiliser finalShippingFee
           sellerId,
-          brand: brand || null,
+          // brand retiré - n'existe pas dans le schéma Prisma
         },
         include: {
           seller: {
@@ -210,7 +210,7 @@ class ProductController {
           weight: product.weight,
           dimensions: product.dimensions,
           shippingFee: product.shippingFee,
-          brand: product.brand,
+          // brand: product.brand, // Retiré
           createdAt: product.createdAt,
           updatedAt: product.updatedAt,
           seller: product.seller,
@@ -302,18 +302,18 @@ class ProductController {
   async updateProduct(req, res) {
     try {
       const { productId } = req.params;
-      const { 
-        name, 
-        description, 
-        price, 
-        stock, 
-        category, 
-        images, 
+      const {
+        name,
+        description,
+        price,
+        stock,
+        category,
+        images,
         isActive,
         attributes,
         weight,
-        dimensions,
-        brand
+        dimensions
+        // brand // Retiré - n'existe pas dans schéma Prisma
       } = req.body;
 
       // Vérifier que le produit existe
@@ -364,7 +364,7 @@ class ProductController {
           ...(attributes && { attributes }),
           ...(weight !== undefined && { weight: parseFloat(weight) }),
           ...(dimensions !== undefined && { dimensions: dimensionsJson }),
-          ...(brand !== undefined && { brand }),
+          // ...(brand !== undefined && { brand }), // Retiré
           shippingFee,
         },
         include: {
